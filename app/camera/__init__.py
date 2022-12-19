@@ -1,6 +1,7 @@
 from threading import Thread
 
 from cv2 import VideoCapture
+from numpy import ndarray
 from typing_extensions import Self
 
 
@@ -10,9 +11,9 @@ class Camera:
         
         self.capture_id = capture_id
         self.capture: VideoCapture
-        self.capture_process: Thread
+        self.capture_thread: Thread
+        self.buffer: ndarray
         self.stop_capture = False
-        self.buffer = []
 
 
     def __enter__(self) -> Self:
@@ -22,19 +23,16 @@ class Camera:
         if not self.capture.isOpened():
             raise IOError("Unable to open device.")
 
-        self.capture_process = Thread(target=self.start_capture)
-        self.capture_process.start()
+        self.capture_thread = Thread(target=self.start_capture)
+        self.capture_thread.start()
         
         return self
 
 
     def __exit__(self, *_):
 
-        if not self.capture_process:
-            return
-
         self.stop_capture = True
-        self.capture_process.join()
+        self.capture_thread.join()
         self.capture.release()
 
 
