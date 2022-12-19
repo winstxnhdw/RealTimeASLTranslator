@@ -26,8 +26,6 @@ def camera_loop(camera: Camera):
 
 
 def main():
-    
-    cv.namedWindow('Camera', cv.WINDOW_GUI_NORMAL)
 
     with Camera(0) as camera:
         camera_loop(camera)
