@@ -37,7 +37,7 @@
         }
 
         if (result_text !== previous_result) {
-          previous_result = result
+          previous_result = result_text
           const word = document.createElement('span')
           word.className = 'word'
           word.innerHTML = result_text
@@ -61,7 +61,7 @@
         } else {
           reduce_opacity()
         }
-      }, 1000)
+      }, 500)
     </script>
   </head>
 </html>
