@@ -1,27 +1,24 @@
+from collections import deque
 from threading import Thread
 
-from cv2 import VideoCapture, CAP_PROP_FRAME_WIDTH, CAP_PROP_FRAME_HEIGHT
-from numpy import ndarray
+from cv2 import VideoCapture
 from typing_extensions import Self
 
 class Camera:
 
-    def __init__(self, capture_id: int=0, width: int=1920, height: int=1080):
+    def __init__(self, capture_id: int=0, buffer_size: int=1):
         
         self.capture_id = capture_id
-        self.width = width
-        self.height = height
+        self.buffer_size = buffer_size
         self.capture: VideoCapture
         self.capture_thread: Thread
-        self.buffer: ndarray = []
+        self.buffer = deque()
         self.stop_capture = False
 
 
     def __enter__(self) -> Self:
 
         self.capture = VideoCapture(self.capture_id)
-        self.capture.set(CAP_PROP_FRAME_WIDTH, self.width)
-        self.capture.set(CAP_PROP_FRAME_HEIGHT, self.height)
 
         if not self.capture.isOpened():
             raise IOError("Unable to open device.")
@@ -45,10 +42,16 @@ class Camera:
             if self.stop_capture:
                 break
 
-            _, self.buffer = self.capture.read()
+            _, frame = self.capture.read()
+
+            if len(self.buffer) == self.buffer_size:
+                self.buffer.popleft()
+
+            self.buffer.append(frame)
 
 
     def is_capturing(self) -> bool:
 
-        return len(self.buffer) != 0
+        print(f"Filling buffer: {len(self.buffer)}/{self.buffer_size}")
+        return len(self.buffer) == self.buffer_size
             

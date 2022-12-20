@@ -1,5 +1,7 @@
 import math
 import pickle
+from collections import deque
+from os.path import exists
 from subprocess import run
 
 import cv2 as cv
@@ -130,7 +132,9 @@ def load_model(checkpoint_path: str, number_of_classes: int, number_of_frames: i
         num_in_frames=number_of_frames
     )).cuda()
 
-    run(['cat', 'app/checkpoints/*', '>>', Config.checkpoint_path])
+    if not exists(Config.checkpoint_path):
+        run(['cat', 'app/checkpoints/*', '>>', Config.checkpoint_path])
+
     checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(checkpoint['state_dict'])
     model.eval()
@@ -144,7 +148,7 @@ def load_vocabulary(vocabulary_path: str) -> dict:
         return pickle.load(file)
 
 
-def prepare_input(video: np.ndarray, input_resolution: int, resize_resolution: int=256, mean: torch.Tensor=0.5*torch.ones(3), std: torch.Tensor=1.0*torch.ones(3)) -> np.ndarray:
+def prepare_input(video: np.ndarray, input_resolution: int=224, resize_resolution: int=256, mean: torch.Tensor=0.5*torch.ones(3), std: torch.Tensor=1.0*torch.ones(3)) -> np.ndarray:
 
     video_tensor = torch.stack(
         [im_to_torch(frame[:, :, [2, 1, 0]]) for frame in video]
@@ -198,11 +202,11 @@ def sliding_windows(input_video: torch.Tensor, number_of_frames: int, stride: in
     return rgb_slided
 
 
-def video_to_asl(video: list) -> str:
+def video_to_asl(video: deque) -> str:
 
     model = load_model(Config.checkpoint_path, Config.number_of_classes, Config.number_of_frames)
     word_data = load_vocabulary(Config.vocabulary_path)
-    input_video = prepare_input(video, 256)
+    input_video = prepare_input(video)
     input_sliding_window = sliding_windows(input_video, Config.stride, Config.number_of_frames)
 
     num_clips = input_sliding_window.shape[0]
@@ -226,4 +230,5 @@ def video_to_asl(video: list) -> str:
     print(prob_topk)
     print("Predicted signs:")
     print(word_topk)
+    return word_topk[0][0]
 

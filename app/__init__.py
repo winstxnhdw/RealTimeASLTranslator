@@ -3,6 +3,7 @@ from time import sleep
 import cv2 as cv
 
 from app.camera import Camera
+# from app.translator import video_to_asl
 
 # example code
 def camera_loop(camera: Camera):
@@ -17,7 +18,8 @@ def camera_loop(camera: Camera):
         sleep(1)
 
     while True:
-        cv.imshow('Input', camera.buffer)
+        cv.imshow('Input', camera.buffer[-1])
+        # print(video_to_asl(camera.buffer))
 
         if cv.waitKey(1) == 27:
             break
@@ -27,5 +29,5 @@ def camera_loop(camera: Camera):
 
 def main():
 
-    with Camera(0) as camera:
+    with Camera(0, 64) as camera:
         camera_loop(camera)
