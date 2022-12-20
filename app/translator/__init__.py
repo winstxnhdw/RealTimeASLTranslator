@@ -149,12 +149,11 @@ def load_vocabulary(vocabulary_path: str) -> dict:
 
 
 def prepare_input(video: np.ndarray, input_resolution: int=224, resize_resolution: int=256, mean: torch.Tensor=0.5*torch.ones(3), std: torch.Tensor=1.0*torch.ones(3)) -> np.ndarray:
-
     video_tensor = torch.stack(
-        [im_to_torch(frame[:, :, [2, 1, 0]]) for frame in video]
+        [im_to_torch(frame[:, :, [2, 1, 0]]) for frame in list(video)]
     ).permute(1, 0, 2, 3)
 
-    iC, iF = video_tensor.shape
+    iC, iF, _, _ = video_tensor.shape
     video_tensor_resized = np.zeros((iF, resize_resolution, resize_resolution, iC))
     for t in range(iF):
         tmp = video_tensor[:, t, :, :]
@@ -179,6 +178,7 @@ def sliding_windows(input_video: torch.Tensor, number_of_frames: int, stride: in
     Return sliding windows and corresponding (middle) timestamp
     """
     C, nFrames, H, W = input_video.shape
+    print(f"Input video shape: {input_video.shape}")
     # If needed, pad to the minimum clip length
     if nFrames < number_of_frames:
         rgb_ = torch.zeros(C, number_of_frames, H, W)
@@ -207,7 +207,7 @@ def video_to_asl(video: deque) -> str:
     model = load_model(Config.checkpoint_path, Config.number_of_classes, Config.number_of_frames)
     word_data = load_vocabulary(Config.vocabulary_path)
     input_video = prepare_input(video)
-    input_sliding_window = sliding_windows(input_video, Config.stride, Config.number_of_frames)
+    input_sliding_window = sliding_windows(input_video, Config.number_of_frames, Config.stride)
 
     num_clips = input_sliding_window.shape[0]
     # Group the clips into batches
