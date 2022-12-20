@@ -202,10 +202,7 @@ def sliding_windows(input_video: torch.Tensor, number_of_frames: int, stride: in
     return rgb_slided
 
 
-def video_to_asl(video: deque) -> str:
-
-    model = load_model(Config.checkpoint_path, Config.number_of_classes, Config.number_of_frames)
-    word_data = load_vocabulary(Config.vocabulary_path)
+def video_to_asl(video: deque, confidence: float, model, word_data) -> str:
     input_video = prepare_input(video)
     input_sliding_window = sliding_windows(input_video, Config.number_of_frames, Config.stride)
 
@@ -227,8 +224,10 @@ def video_to_asl(video: deque) -> str:
         for i, p in enumerate(pred_sorted[:, k]):
             word_topk[k, i] = word_data["words"][p]
     prob_topk = prob_sorted[:, :Config.topk].transpose()
-    print(prob_topk)
-    print("Predicted signs:")
-    print(word_topk)
-    return word_topk[0][0]
+    print(prob_topk[0,0])
+    if prob_topk[0,0] > confidence:   
+        return word_topk[0][0]
+    # print(prob_topk)
+    # print("Predicted signs:")
+    # print(word_topk)
 
