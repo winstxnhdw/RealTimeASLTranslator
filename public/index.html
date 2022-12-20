@@ -17,7 +17,18 @@
 
       const reduce_opacity = () => {
         const opacity = Number(result_element.style.opacity)
-        result_element.style.opacity = (opacity - 0.005).toString()
+
+        gsap.fromTo(
+          result_element,
+          {
+            opacity: opacity
+          },
+          {
+            opacity: opacity - 0.05,
+            ease: 'Expo.easeOut',
+            duration: 0.5
+          }
+        )
 
         if (opacity <= 0.0) {
           result_element.replaceChildren()
@@ -43,6 +54,7 @@
           word.innerHTML = result_text
           result_element.appendChild(word)
           result_element.style.opacity = '1'
+
           gsap.fromTo(
             word,
             {
