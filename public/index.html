@@ -23,7 +23,7 @@
 
       setInterval(() => {
         opacity_progress -= 0.001
-        result_element.style.opacity = String(ease_out_expo(opacity_progress))
+        result_element.style.opacity = String(ease_in_expo(opacity_progress))
       }, timestep * 1000)
 
       setInterval(async () => {
