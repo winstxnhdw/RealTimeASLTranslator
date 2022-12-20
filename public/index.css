@@ -1,8 +1,20 @@
+span {
+    line-height: 1.8;
+    word-wrap: normal;
+    display: inline-block;
+    padding-right: 0.3em;
+}
+
 #result {
-    position: absolute;
-    top: 50%;
+    position: fixed;
     left: 50%;
-    margin: -50px 0 0 -50px;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.word {
     text-align: center;
     opacity: 1;
+    font-family: 'Roboto Mono', monospace;
+    font-size: xx-large;
 }

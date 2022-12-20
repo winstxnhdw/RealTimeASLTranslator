@@ -4,7 +4,7 @@ from threading import Thread
 
 class PredictedResult:
 
-    out = ""
+    out = "hello"
 
 
 class Server(BaseHTTPRequestHandler):
@@ -12,8 +12,7 @@ class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Credentials', '*')
-        self.send_header('Access-Control-Allow-Origin', 'http://localhost:5000')
+        self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header("Content-type", "text/xml")
         self.end_headers()
         self.wfile.write(PredictedResult.out.encode('utf-8'))
