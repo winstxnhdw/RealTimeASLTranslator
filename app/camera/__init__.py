@@ -12,7 +12,7 @@ class Camera:
         self.buffer_size = buffer_size
         self.capture: VideoCapture
         self.capture_thread: Thread
-        self.buffer = deque()
+        self.buffer = deque([], buffer_size)
         self.stop_capture = False
 
 
