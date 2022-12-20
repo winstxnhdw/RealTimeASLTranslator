@@ -2,66 +2,65 @@
 
 <html lang="en">
   <head>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="index.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.6.1/gsap.min.js"></script>
 
-    <div class="background">
-      <div id="result" class="noselect">Test</div>
-    </div>
+    <div id="result"></div>
 
     <script type="text/javascript" charset="utf-8">
       const result_element = document.getElementById('result')
       let previous_result = ''
+      result_element.style.opacity = '1'
+
+      const reduce_opacity = () => {
+        const opacity = Number(result_element.style.opacity)
+        result_element.style.opacity = (opacity - 0.1).toString()
+
+        if (opacity <= 0.0) {
+          result_element.replaceChildren()
+          result_element.style.opacity = '0'
+        }
+      }
 
       setInterval(async () => {
-        const result = await fetch(new URL('http://localhost:5000'))
+        const result = await fetch('http://localhost:5000/')
+
         if (result.status !== 200) return
-        console.log('yo')
-        if (result !== previous_result) {
-          console.log('test')
-          previous_result = result
-          result_element.style.opacity = 1
-          result_element.innerHTML += result
-        } else {
-          console.log('here')
-          result_element.style.opacity -= 0.1
-
-          if (result_element.style.opacity <= 0) {
-            result_element.innerHTML = ''
-          }
+        const result_text = await result.text()
+        if (result_text === '') {
+          reduce_opacity()
+          return
         }
-      }, 16)
-      // gsap.fromTo(
-      //   '.logo',
-      //   {
-      //     autoAlpha: 0,
-      //     filter: 'blur(10px)',
-      //     y: 40
-      //   },
-      //   {
-      //     autoAlpha: 1,
-      //     filter: 'blur(0px)',
-      //     y: 0,
-      //     ease: 'Expo.easeOut',
-      //     duration: 1.5
-      //   }
-      // )
 
-      // gsap.fromTo(
-      //   '.text',
-      //   {
-      //     autoAlpha: 0,
-      //     filter: 'blur(10px)',
-      //     y: 50
-      //   },
-      //   {
-      //     autoAlpha: 1,
-      //     filter: 'blur(0px)',
-      //     y: 0,
-      //     ease: 'Expo.easeOut',
-      //     duration: 3
-      //   }
-      // )
+        if (result_text !== previous_result) {
+          previous_result = result
+          const word = document.createElement('span')
+          word.className = 'word'
+          word.innerHTML = result_text
+          result_element.appendChild(word)
+          result_element.style.opacity = '1'
+          gsap.fromTo(
+            word,
+            {
+              autoAlpha: 0,
+              filter: 'blur(10px)',
+              y: 40
+            },
+            {
+              autoAlpha: 1,
+              filter: 'blur(0px)',
+              y: 0,
+              ease: 'Expo.easeOut',
+              duration: 0.5
+            }
+          )
+        } else {
+          reduce_opacity()
+        }
+      }, 1000)
     </script>
   </head>
 </html>

@@ -224,9 +224,10 @@ def video_to_asl(video: deque, confidence: float, model, word_data) -> str:
         for i, p in enumerate(pred_sorted[:, k]):
             word_topk[k, i] = word_data["words"][p]
     prob_topk = prob_sorted[:, :Config.topk].transpose()
-    print(prob_topk[0,0])
+    # print(prob_topk[0,0])
     if prob_topk[0,0] > confidence:   
         return word_topk[0][0]
+    return ""
     # print(prob_topk)
     # print("Predicted signs:")
     # print(word_topk)
