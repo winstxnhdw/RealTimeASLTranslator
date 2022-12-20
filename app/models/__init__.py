@@ -1,11 +1,11 @@
 from math import ceil
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from torch import cat
+from torch.nn import AvgPool3d, BatchNorm3d, Conv3d, Dropout, MaxPool3d, Module
+from torch.nn.functional import pad, relu
 
 
-class MaxPool3dSamePadding(nn.MaxPool3d):
+class MaxPool3dSamePadding(MaxPool3d):
     def compute_pad(self, dim, s):
         if s % self.stride[dim] == 0:
             return max(self.kernel_size[dim] - self.stride[dim], 0)
@@ -14,7 +14,7 @@ class MaxPool3dSamePadding(nn.MaxPool3d):
 
     def forward(self, x):
         # compute 'same' padding
-        (batch, channel, t, h, w) = x.size()
+        _, _, t, h, w = x.size()
         # print t,h,ms.shaw
         # out_t = np.ceil(float(t) / float(self.stride[0]))
         # out_h = np.ceil(float(h) / float(self.stride[1]))
@@ -32,14 +32,13 @@ class MaxPool3dSamePadding(nn.MaxPool3d):
         pad_w_f = pad_w // 2
         pad_w_b = pad_w - pad_w_f
 
-        pad = (pad_w_f, pad_w_b, pad_h_f, pad_h_b, pad_t_f, pad_t_b)
-        # print x.size()
-        # print pad
-        x = F.pad(x, pad)
+        padding = (pad_w_f, pad_w_b, pad_h_f, pad_h_b, pad_t_f, pad_t_b)
+        x = pad(x, padding)
         return super(MaxPool3dSamePadding, self).forward(x)
 
 
-class Unit3D(nn.Module):
+class Unit3D(Module):
+
     def __init__(
         self,
         in_channels,
@@ -47,7 +46,7 @@ class Unit3D(nn.Module):
         kernel_shape=(1, 1, 1),
         stride=(1, 1, 1),
         padding=0,
-        activation_fn=F.relu,
+        activation_fn=relu,
         use_batch_norm=True,
         use_bias=False,
         name="unit_3d",
@@ -67,7 +66,7 @@ class Unit3D(nn.Module):
         self.name = name
         self.padding = padding
 
-        self.conv3d = nn.Conv3d(
+        self.conv3d = Conv3d(
             in_channels=in_channels,
             out_channels=self._output_channels,
             kernel_size=self._kernel_shape,
@@ -78,7 +77,7 @@ class Unit3D(nn.Module):
 
         if self._use_batch_norm:
             if self._num_domains == 1:
-                self.bn = nn.BatchNorm3d(self._output_channels, eps=0.001, momentum=0.01)
+                self.bn = BatchNorm3d(self._output_channels, eps=0.001, momentum=0.01)
 
 
     def compute_pad(self, dim, s):
@@ -87,9 +86,10 @@ class Unit3D(nn.Module):
         else:
             return max(self._kernel_shape[dim] - (s % self._stride[dim]), 0)
 
+
     def forward(self, x):
         # compute 'same' padding
-        (batch, channel, t, h, w) = x.size()
+        _, _, t, h, w = x.size()
         # print t,h,w
         # out_t = np.ceil(float(t) / float(self._stride[0]))
         # out_h = np.ceil(float(h) / float(self._stride[1]))
@@ -107,10 +107,10 @@ class Unit3D(nn.Module):
         pad_w_f = pad_w // 2
         pad_w_b = pad_w - pad_w_f
 
-        pad = (pad_w_f, pad_w_b, pad_h_f, pad_h_b, pad_t_f, pad_t_b)
+        padding = (pad_w_f, pad_w_b, pad_h_f, pad_h_b, pad_t_f, pad_t_b)
         # print x.size()
         # print pad
-        x = F.pad(x, pad)
+        x = pad(x, padding)
         # print x.size()
 
         x = self.conv3d(x)
@@ -121,7 +121,7 @@ class Unit3D(nn.Module):
         return x
 
 
-class InceptionModule(nn.Module):
+class InceptionModule(Module):
     def __init__(self, in_channels, out_channels, name, num_domains=1):
         super(InceptionModule, self).__init__()
 
@@ -175,10 +175,10 @@ class InceptionModule(nn.Module):
         b1 = self.b1b(self.b1a(x))
         b2 = self.b2b(self.b2a(x))
         b3 = self.b3b(self.b3a(x))
-        return torch.cat([b0, b1, b2, b3], dim=1)
+        return cat([b0, b1, b2, b3], dim=1)
 
 
-class InceptionI3d(nn.Module):
+class InceptionI3d(Module):
     """Inception-v1 I3D architecture.
     The model is introduced in:
         Quo Vadis, Action Recognition? A New Model and the Kinetics Dataset
@@ -390,9 +390,9 @@ class InceptionI3d(nn.Module):
 
         last_duration = int(ceil(num_in_frames / 8))  # 8
         last_size = 7  # int(ceil(sample_width / 32))  # this is for 224
-        self.avgpool = nn.AvgPool3d((last_duration, last_size, last_size), stride=1)
+        self.avgpool = AvgPool3d((last_duration, last_size, last_size), stride=1)
 
-        self.dropout = nn.Dropout(dropout_keep_prob)
+        self.dropout = Dropout(dropout_keep_prob)
 
         self.logits = Unit3D(
             in_channels=384 + 384 + 128 + 128,

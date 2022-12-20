@@ -4,17 +4,14 @@ from time import sleep
 import cv2 as cv
 
 from app.camera import Camera
-from app.translator import video_to_asl
 from app.server import HTTPDaemon, PredictedResult
+from app.translator import Translator
 
-from app.translator import load_model, load_vocabulary
-from app.config import Config
 
-# from app.translator import video_to_asl
-
-def camera_loop(camera: Camera, model, word_data):
+def camera_loop(camera: Camera):
 
     retry_count = 0
+    translator = Translator()
 
     while not camera.is_capturing():
         if retry_count > 3:
@@ -25,8 +22,7 @@ def camera_loop(camera: Camera, model, word_data):
 
     while True:
         cv.imshow('Input', camera.buffer[-1])
-        PredictedResult.out = video_to_asl(video = camera.buffer, confidence = 0.7, model = model, word_data = word_data)
-        print(PredictedResult.out)
+        PredictedResult.out = translator.video_to_asl(camera.buffer, confidence=0.7)
 
         if cv.waitKey(1) == 27:
             break
@@ -35,12 +31,9 @@ def camera_loop(camera: Camera, model, word_data):
 
 
 def main():
-    model = load_model(Config.checkpoint_path, Config.number_of_classes, Config.number_of_frames)
-    word_data = load_vocabulary(Config.vocabulary_path)
 
-    # sleep(10000)
     with Camera(0, 64) as camera:
-        camera_loop(camera, model, word_data)
+        camera_loop(camera)
 
 
 def init_server():

@@ -3,9 +3,6 @@ pympi-ling
 intervaltree
 zsvision
 mergedeep
-beartype
-wget
-pandas
 humanize
 mock
 tqdm
@@ -13,7 +10,5 @@ tensorboard
 scipy
 pillow
 scikit-learn
-youtube-dl
 frozendict
-matplotlib
 numpy

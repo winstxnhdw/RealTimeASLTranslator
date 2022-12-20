@@ -4,6 +4,7 @@ from threading import Thread
 from cv2 import VideoCapture
 from typing_extensions import Self
 
+
 class Camera:
 
     def __init__(self, capture_id: int=0, buffer_size: int=1):
