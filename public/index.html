@@ -22,8 +22,11 @@
         progress_value == 0.0 ? 0.0 : Math.pow(2.0, 10.0 * progress_value - 10.0)
 
       setInterval(() => {
-        opacity_progress -= 0.001
+        opacity_progress -= 0.0025
         result_element.style.opacity = String(ease_in_expo(opacity_progress))
+        if (Number(result_element.style.opacity) <= 0.05) {
+          result_element.replaceChildren()
+        }
       }, timestep * 1000)
 
       setInterval(async () => {
@@ -57,6 +60,7 @@
             }
           )
         }
+
       }, 500)
     </script>
   </head>
