@@ -15,33 +15,32 @@
       let previous_result = ''
       result_element.style.opacity = '1'
 
-      const reduce_opacity = () => {
-        const opacity = Number(result_element.style.opacity)
-        result_element.style.opacity = (opacity - 0.1).toString()
+      const timestep = 1 / 60
+      let opacity_progress = 1
 
-        if (opacity <= 0.0) {
-          result_element.replaceChildren()
-          result_element.style.opacity = '0'
-        }
-      }
+      const ease_in_expo = (progress_value) =>
+        progress_value == 0.0 ? 0.0 : Math.pow(2.0, 10.0 * progress_value - 10.0)
+
+      setInterval(() => {
+        opacity_progress -= 0.001
+        result_element.style.opacity = String(ease_out_expo(opacity_progress))
+      }, timestep * 1000)
 
       setInterval(async () => {
         const result = await fetch('http://localhost:5000/')
 
         if (result.status !== 200) return
         const result_text = await result.text()
-        if (result_text === '') {
-          reduce_opacity()
-          return
-        }
 
+        if (result_text === '') return
         if (result_text !== previous_result) {
-          previous_result = result
+          previous_result = result_text
           const word = document.createElement('span')
           word.className = 'word'
           word.innerHTML = result_text
           result_element.appendChild(word)
-          result_element.style.opacity = '1'
+          opacity_progress = 1
+
           gsap.fromTo(
             word,
             {
@@ -57,10 +56,8 @@
               duration: 0.5
             }
           )
-        } else {
-          reduce_opacity()
         }
-      }, 1000)
+      }, 500)
     </script>
   </head>
 </html>
