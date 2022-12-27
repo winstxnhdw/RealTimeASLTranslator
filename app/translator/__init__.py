@@ -166,7 +166,7 @@ class Translator:
     def prepare_input(self, video: deque, input_resolution: int=224, resize_resolution: int=256, mean: torch.Tensor=0.5*torch.ones(3), std: torch.Tensor=1.0*torch.ones(3)) -> np.ndarray:
        
         video_tensor = torch.stack(
-            [self.im_to_torch(frame[:, :, [2, 1, 0]]) for frame in list(video)]
+            [self.im_to_torch(frame[:, :, [2, 1, 0]]) for frame in video]
         ).permute(1, 0, 2, 3)
 
         iC, iF, _, _ = video_tensor.shape
