@@ -16,10 +16,12 @@ from app.models import InceptionI3d
 
 class Translator:
 
-    def __init__(self):
+    def __init__(self, confidence: float):
 
+        self.confidence = confidence
         self.model = self.load_model(Config.checkpoint_path, Config.number_of_classes, Config.number_of_frames)
         self.word_data = self.load_vocabulary(Config.vocabulary_path)
+        self.result = ""
 
 
     def resize_generic(self, img, oheight, owidth, interp="bilinear", is_flow=False):
@@ -121,6 +123,7 @@ class Translator:
         
         img = self.to_numpy(img)
         img = np.transpose(img, (1, 2, 0))  # H*W*C
+        
         return img
 
 
@@ -128,9 +131,8 @@ class Translator:
 
         img = np.transpose(img, (2, 0, 1))  # C*H*W
         img = self.to_torch(img).float()
-        if img.max() > 1:
-            img /= 255
-        return img
+
+        return img / 255 if img.max() > 1 else img
 
 
     def load_model(self, checkpoint_path: str, number_of_classes: int, number_of_frames: int) -> Module:
@@ -161,7 +163,8 @@ class Translator:
             return pickle.load(file)
 
 
-    def prepare_input(self, video: np.ndarray, input_resolution: int=224, resize_resolution: int=256, mean: torch.Tensor=0.5*torch.ones(3), std: torch.Tensor=1.0*torch.ones(3)) -> np.ndarray:
+    def prepare_input(self, video: deque, input_resolution: int=224, resize_resolution: int=256, mean: torch.Tensor=0.5*torch.ones(3), std: torch.Tensor=1.0*torch.ones(3)) -> np.ndarray:
+       
         video_tensor = torch.stack(
             [self.im_to_torch(frame[:, :, [2, 1, 0]]) for frame in list(video)]
         ).permute(1, 0, 2, 3)
@@ -214,7 +217,7 @@ class Translator:
         return rgb_slided
 
 
-    def video_to_asl(self, video: deque, confidence: float) -> str:
+    def video_to_asl(self, video: deque):
 
         input_video = self.prepare_input(video)
         input_sliding_window = self.sliding_windows(input_video, Config.number_of_frames, Config.stride)
@@ -239,4 +242,4 @@ class Translator:
         prob_topk = prob_sorted[:, :Config.topk].transpose()
 
         # print(np.array([word_topk, prob_topk]).transpose())
-        return "" if prob_topk[0, 0] <= confidence else word_topk[0, 0]
+        self.result = "" if prob_topk[0, 0] <= self.confidence else word_topk[0, 0]

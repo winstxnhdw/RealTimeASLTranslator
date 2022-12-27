@@ -4,14 +4,13 @@ from time import sleep
 import cv2 as cv
 
 from app.camera import Camera
-from app.server import HTTPDaemon, PredictedResult
+from app.server import HTTPDaemon
 from app.translator import Translator
 
 
-def camera_loop(camera: Camera):
+def camera_loop(camera: Camera, translator: Translator):
 
     retry_count = 0
-    translator = Translator()
 
     while not camera.is_capturing():
         if retry_count > 3:
@@ -22,7 +21,7 @@ def camera_loop(camera: Camera):
 
     while True:
         cv.imshow('Input', camera.buffer[-1])
-        PredictedResult.out = translator.video_to_asl(camera.buffer, confidence=0.7)
+        translator.video_to_asl(camera.buffer)
 
         if cv.waitKey(1) == 27:
             break
@@ -30,20 +29,21 @@ def camera_loop(camera: Camera):
     cv.destroyAllWindows()
 
 
-def main():
+def main(translator: Translator):
 
     with Camera(0, 64) as camera:
-        camera_loop(camera)
+        camera_loop(camera, translator)
 
 
 def init_server():
 
-    port = parse_args()
     host = 'localhost'
+    port = parse_args()
+    translator = Translator(confidence=0.7)
 
-    with HTTPDaemon(host, port):
+    with HTTPDaemon(host, port, translator):
         try:
-            main()
+            main(translator)
             
         except KeyboardInterrupt:
             print("\nManual exit detected.")

@@ -1,29 +1,36 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 
-
-class PredictedResult:
-
-    out = ''
+from app.translator import Translator
 
 
 class Server(BaseHTTPRequestHandler):
+
+    def __init__(self, translator: Translator):
+        
+        self.translator = translator
+
+
+    def __call__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
 
     def do_GET(self):
         
         self.send_response(200)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
-        self.wfile.write(PredictedResult.out.encode('utf-8'))
+        self.wfile.write(translator.result.encode('utf-8'))
 
 
 class HTTPDaemon:
 
-    def __init__(self, host: str, port: int):
+    def __init__(self, host: str, port: int, translator: Translator):
 
         self.host = host
         self.port = port
-        self.httpd = HTTPServer((self.host, self.port), Server)
+        self.httpd = HTTPServer((self.host, self.port), Server(translator))
 
         self.server_thread: Thread
 
